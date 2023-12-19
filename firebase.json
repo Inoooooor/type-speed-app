@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "site": "type-speed-booster",
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+}
