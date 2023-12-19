@@ -3,7 +3,7 @@
     <div class="container h-full">
       <div class="flex flex-col justify-evenly h-full">
         <div
-          class="fetchedtext bg-white rounded-3xl basis-1/4 sm:text-2xl text-base p-5 shadow-xl"
+          class="bg-white rounded-3xl basis-1/4 sm:text-2xl text-base p-5 shadow-xl select-none"
         >
           <span
             class="text-letter"
@@ -35,10 +35,29 @@
       </div>
     </div>
   </div>
+  <el-dialog
+    v-model="isDialogVisible"
+    align-center
+    width="70%"
+    class="text-2xl"
+  >
+    <template #header> Результаты </template>
+
+    <p class="text-lg">Времени потрачено: {{ timeElapsed }}</p>
+    <p class="text-lg">Совершено ошибок: {{ errorsCount }}</p>
+    <p class="text-lg">Скорость печати: {{ speed }} знаков/сек</p>
+    <template #footer>
+      <el-button
+        @click="refreshPage"
+        type="primary"
+        >Попробовать снова</el-button
+      >
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, computed } from "vue"
+import { ref, computed, watch } from "vue"
 import axios from "axios"
 
 const templateArray = ref([])
@@ -47,22 +66,27 @@ const inputValue = ref("")
 
 const speed = ref(0)
 const time = ref(59)
+const errorsCount = ref(0)
+const isDialogVisible = ref(false)
 
 let timer = null
 
 const inputValueArray = computed(() => inputValue.value.split(""))
 const charsTypedLength = computed(() => inputValue.value.length)
 const fetchedTextLength = computed(() => fetchedText.value.length)
+const timeElapsed = computed(() => 60 - time.value)
 
 const fetchText = async () => {
-  const url = "https://api.api-ninjas.com/v1/quotes?category=happiness"
+  const url = new URL("https://api.api-ninjas.com/v1/quotes")
+  url.searchParams.set("category", "happiness")
 
-  const { data } = await axios.get(url, {
+  const options = {
     headers: {
-      "Content-Type": "multipart/form-data",
       "x-api-key": "4H8I64Fd/e5raYcO860ePw==MDI0QwiC0pKXicg7",
     },
-  })
+  }
+
+  const { data } = await axios.get(url, options)
 
   fetchedText.value = data[0].quote
 }
@@ -76,11 +100,18 @@ const handleTimer = () => {
   }
 }
 
+const measureTypeSpeed = () => {
+  const timeGiven = 60
+  const timeElapsed = timeGiven - time.value
+  const charsPerMinute = Math.round((charsTypedLength.value / timeElapsed) * 60)
+
+  speed.value = charsPerMinute
+}
+
 const checkInput = () => {
   measureTypeSpeed()
   handleTimer()
 
-  // console.log(inputValueArray.value)
   inputValueArray.value.forEach((letter, index) => {
     if (letter !== templateArray.value[index].innerText) {
       templateArray.value[index].className = "text-red-600 underline"
@@ -90,15 +121,31 @@ const checkInput = () => {
   })
 }
 
-const measureTypeSpeed = () => {
-  const timeGiven = 60
-  const timeElapsed = timeGiven - time.value
-  const charsPerMinute = Math.round((charsTypedLength.value / timeElapsed) * 60)
-
-  speed.value = charsPerMinute
+const countErrors = () => {
+  errorsCount.value = templateArray.value.reduce((acc, el) => {
+    if (el.className !== "text-red-600 underline") return acc
+    return acc + 1
+  }, 0)
 }
 
 fetchText()
+
+watch(inputValue, (newValue) => {
+  if (newValue.length === fetchedTextLength.value) {
+    clearInterval(timer)
+    countErrors()
+    isDialogVisible.value = true
+  }
+})
+
+watch(time, (newValue) => {
+  if (newValue === 0) {
+    countErrors()
+    isDialogVisible.value = true
+  }
+})
+
+const refreshPage = () => location.reload()
 </script>
 
 <style scoped></style>
