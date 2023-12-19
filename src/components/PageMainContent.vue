@@ -18,7 +18,7 @@
             v-model="inputValue"
             :maxlength="fetchedTextLength"
             :placeholder="fetchedText"
-            class="placeholder:text-2xl w-full h-full focus:outline-none sm:text-2xl text-base resize-none"
+            class="sm:placeholder:text-2xl placeholder:text-base w-full h-full focus:outline-none text-base sm:text-2xl resize-none"
             @input="checkInput"
           ></textarea>
           <div
