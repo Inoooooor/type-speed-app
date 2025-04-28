@@ -78,7 +78,7 @@ const timeElapsed = computed(() => 60 - time.value)
 
 const fetchText = async () => {
   const url = new URL("https://api.api-ninjas.com/v1/quotes")
-  url.searchParams.set("category", "happiness")
+  // url.searchParams.set("category", "happiness")
 
   const options = {
     headers: {
